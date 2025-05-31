@@ -1,0 +1,212 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>London Bike Demand Prediction</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+</head>
+<body>
+    <nav class="navbar navbar-expand-lg navbar-dark bg-primary">
+        <div class="container">
+            <a class="navbar-brand" href="/">
+                <i class="fas fa-bicycle me-2"></i>
+                London Bike Demand Prediction
+            </a>
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            <div class="collapse navbar-collapse" id="navbarNav">
+                <ul class="navbar-nav ms-auto">
+                    <li class="nav-item">
+                        <a class="nav-link active" href="/">Home</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="/performance">Model Performance</a>
+                    </li>
+                </ul>
+            </div>
+        </div>
+    </nav>
+
+    <div class="container mt-5">
+        <div class="row">
+            <div class="col-md-6">
+                <div class="card">
+                    <div class="card-header bg-primary text-white">
+                        <h5 class="card-title mb-0">
+                            <i class="fas fa-sliders-h me-2"></i>
+                            Input Methods
+                        </h5>
+                    </div>
+                    <div class="card-body">
+                        <ul class="nav nav-tabs" id="inputTabs" role="tablist">
+                            <li class="nav-item" role="presentation">
+                                <button class="nav-link active" id="manual-tab" data-bs-toggle="tab" data-bs-target="#manual" type="button" role="tab">Manual Input</button>
+                            </li>
+                            <li class="nav-item" role="presentation">
+                                <button class="nav-link" id="csv-tab" data-bs-toggle="tab" data-bs-target="#csv" type="button" role="tab">CSV Upload</button>
+                            </li>
+                            <li class="nav-item" role="presentation">
+                                <button class="nav-link" id="api-tab" data-bs-toggle="tab" data-bs-target="#api" type="button" role="tab">API Input</button>
+                            </li>
+                        </ul>
+                        
+                        <div class="tab-content mt-3" id="inputTabsContent">
+                            <!-- Manual Input Form -->
+                            <div class="tab-pane fade show active" id="manual" role="tabpanel">
+                                <form id="predictionForm">
+                                    <div class="mb-3">
+                                        <label for="timestamp" class="form-label">Date and Time</label>
+                                        <input type="datetime-local" class="form-control" id="timestamp" required>
+                                    </div>
+                                    <div class="mb-3">
+                                        <label for="t1" class="form-label">Temperature (°C)</label>
+                                        <input type="number" class="form-control" id="t1" step="0.1" required>
+                                    </div>
+                                    <div class="mb-3">
+                                        <label for="t2" class="form-label">Feels Like Temperature (°C)</label>
+                                        <input type="number" class="form-control" id="t2" step="0.1" required>
+                                    </div>
+                                    <div class="mb-3">
+                                        <label for="hum" class="form-label">Humidity (%)</label>
+                                        <input type="number" class="form-control" id="hum" min="0" max="100" required>
+                                    </div>
+                                    <div class="mb-3">
+                                        <label for="wind_speed" class="form-label">Wind Speed (km/h)</label>
+                                        <input type="number" class="form-control" id="wind_speed" min="0" required>
+                                    </div>
+                                    <div class="mb-3">
+                                        <label for="weather_code" class="form-label">Weather Condition</label>
+                                        <select class="form-select" id="weather_code" required>
+                                            <option value="1">Clear</option>
+                                            <option value="2">Scattered Clouds</option>
+                                            <option value="3">Broken Clouds</option>
+                                            <option value="4">Cloudy</option>
+                                            <option value="7">Rain</option>
+                                            <option value="10">Thunderstorm</option>
+                                            <option value="26">Snowfall</option>
+                                        </select>
+                                    </div>
+                                    <div class="mb-3">
+                                        <label for="is_holiday" class="form-label">Is Holiday?</label>
+                                        <select class="form-select" id="is_holiday" required>
+                                            <option value="0">No</option>
+                                            <option value="1">Yes</option>
+                                        </select>
+                                    </div>
+                                    <div class="mb-3">
+                                        <label for="is_weekend" class="form-label">Is Weekend?</label>
+                                        <select class="form-select" id="is_weekend" required>
+                                            <option value="0">No</option>
+                                            <option value="1">Yes</option>
+                                        </select>
+                                    </div>
+                                    <div class="mb-3">
+                                        <label for="season" class="form-label">Season</label>
+                                        <select class="form-select" id="season" required>
+                                            <option value="0">Spring</option>
+                                            <option value="1">Summer</option>
+                                            <option value="2">Fall</option>
+                                            <option value="3">Winter</option>
+                                        </select>
+                                    </div>
+                                    <button type="submit" class="btn btn-primary w-100">
+                                        <i class="fas fa-calculator me-2"></i>
+                                        Predict
+                                    </button>
+                                </form>
+                            </div>
+
+                            <!-- CSV Upload Form -->
+                            <div class="tab-pane fade" id="csv" role="tabpanel">
+                                <form id="csvForm">
+                                    <div class="mb-3">
+                                        <label for="csvFile" class="form-label">Upload CSV File</label>
+                                        <input type="file" class="form-control" id="csvFile" accept=".csv" required>
+                                        <div class="form-text">CSV should contain columns: timestamp, t1, t2, hum, wind_speed, weather_code, is_holiday, is_weekend, season</div>
+                                    </div>
+                                    <button type="submit" class="btn btn-primary w-100">
+                                        <i class="fas fa-upload me-2"></i>
+                                        Upload and Predict
+                                    </button>
+                                </form>
+                            </div>
+
+                            <!-- API Input Form -->
+                            <div class="tab-pane fade" id="api" role="tabpanel">
+                                <form id="apiForm">
+                                    <div class="mb-3">
+                                        <label for="apiEndpoint" class="form-label">API Endpoint</label>
+                                        <input type="url" class="form-control" id="apiEndpoint" placeholder="https://api.example.com/weather" required>
+                                    </div>
+                                    <div class="mb-3">
+                                        <label for="apiKey" class="form-label">API Key</label>
+                                        <input type="password" class="form-control" id="apiKey" required>
+                                    </div>
+                                    <button type="submit" class="btn btn-primary w-100">
+                                        <i class="fas fa-cloud me-2"></i>
+                                        Fetch and Predict
+                                    </button>
+                                </form>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-md-6">
+                <div class="card">
+                    <div class="card-header bg-primary text-white">
+                        <h5 class="card-title mb-0">
+                            <i class="fas fa-chart-line me-2"></i>
+                            Prediction Results
+                        </h5>
+                    </div>
+                    <div class="card-body">
+                        <div id="result">
+                            <div class="text-center text-muted">
+                                <i class="fas fa-arrow-left fa-2x mb-3"></i>
+                                <p>Enter your data and click predict to see results</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Model Performance Summary Card -->
+                <div class="card mt-4">
+                    <div class="card-header bg-primary text-white">
+                        <h5 class="card-title mb-0">
+                            <i class="fas fa-chart-bar me-2"></i>
+                            Model Performance Summary
+                        </h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="metrics-grid">
+                            <div class="metric-item">
+                                <h6>R² Score</h6>
+                                <p class="metric-value" id="r2Score">-</p>
+                            </div>
+                            <div class="metric-item">
+                                <h6>RMSE</h6>
+                                <p class="metric-value" id="rmseScore">-</p>
+                            </div>
+                        </div>
+                        <div class="text-center mt-3">
+                            <a href="/performance" class="btn btn-outline-primary">
+                                <i class="fas fa-chart-line me-2"></i>
+                                View Detailed Performance
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="{{ url_for('static', filename='js/main.js') }}"></script>
+</body>
+</html> 

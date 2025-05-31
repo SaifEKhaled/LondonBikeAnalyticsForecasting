@@ -1,0 +1,2 @@
+timestamp,cnt,t1,t2,hum,wind_speed,weather_code,is_holiday,is_weekend,season
+2017-01-03 23:00:00,139,5.0,1.0,76.0,22.0,2.0,0.0,0.0,3.0 
