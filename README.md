@@ -136,7 +136,7 @@ The model demonstrates strong predictive capabilities:
 Contributions are welcome! Please feel free to submit a Pull Request.
 
 ## Contact
-For any queries or suggestions, please reach out to [Your Contact Information]
+For any queries or suggestions, please reach out to [saifkhaledd1511@gmail.com]
 
 ## Acknowledgments
 - London Bike Sharing Dataset
