@@ -10,19 +10,19 @@ import os
 
 app = Flask(__name__)
 
-# Load the best model and scaler
+# We tried multiple models and this was the best performing one
 model = joblib.load('bike_model.joblib')
 scaler = joblib.load('scaler.joblib')
 feature_names = joblib.load('feature_names.joblib')
 
 def prepare_input(data):
-    # Convert input data to DataFrame
+    # Converting the input into a dataframe
     df = pd.DataFrame([data])
     
-    # Convert timestamp to datetime
+    # more conversions
     df['timestamp'] = pd.to_datetime(df['timestamp'])
     
-    # Extract time-based features
+    # Extraction of features :D
     df['hour'] = df['timestamp'].dt.hour
     df['day_of_week'] = df['timestamp'].dt.dayofweek
     df['month'] = df['timestamp'].dt.month
@@ -33,11 +33,11 @@ def prepare_input(data):
     df['temp_hum'] = df['t1'] * df['hum']
     df['temp_wind'] = df['t1'] * df['wind_speed']
     
-    # Create dummy variables for categorical features
+    # Categorical features
     weather_dummies = pd.get_dummies(df['weather_code'], prefix='weather')
     season_dummies = pd.get_dummies(df['season'], prefix='season')
     
-    # Combine all features
+    # Combining 
     features = pd.concat([
         df[['t1', 't2', 'hum', 'wind_speed', 'is_holiday', 'is_weekend',
               'hour', 'day_of_week', 'month', 'day_of_year', 'is_rush_hour', 'is_morning', 'is_evening',
@@ -46,12 +46,10 @@ def prepare_input(data):
         season_dummies
     ], axis=1)
     
-    # Ensure all feature columns exist
     for col in feature_names:
         if col not in features.columns:
             features[col] = 0
     
-    # Reorder columns to match training data
     features = features[feature_names]
     
     return features
@@ -61,13 +59,10 @@ def predict():
     try:
         data = request.get_json()
         
-        # Prepare input data
         features = prepare_input(data)
         
-        # Scale features
         features_scaled = scaler.transform(features)
         
-        # Make prediction
         prediction = model.predict(features_scaled)[0]
         
         return jsonify({
@@ -97,16 +92,12 @@ def predict_csv():
                 'status': 'error'
             }), 400
         
-        # Read CSV file
         df = pd.read_csv(file)
         
-        # Prepare input data
         features = prepare_input(df.iloc[0].to_dict())
         
-        # Scale features
         features_scaled = scaler.transform(features)
         
-        # Make prediction
         prediction = model.predict(features_scaled)[0]
         
         return jsonify({
@@ -133,20 +124,15 @@ def predict_api():
                 'status': 'error'
             }), 400
         
-        # Make API request
         response = requests.get(endpoint, headers={'Authorization': f'Bearer {api_key}'})
         response.raise_for_status()
         
-        # Parse API response
         weather_data = response.json()
         
-        # Prepare input data
         features = prepare_input(weather_data)
         
-        # Scale features
         features_scaled = scaler.transform(features)
         
-        # Make prediction
         prediction = model.predict(features_scaled)[0]
         
         return jsonify({
@@ -167,7 +153,6 @@ def home():
 @app.route('/performance')
 def performance():
     try:
-        # Load model metrics
         with open('model_metrics.json', 'r') as f:
             metrics_data = json.load(f)
         

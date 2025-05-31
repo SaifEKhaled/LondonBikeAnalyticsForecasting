@@ -8,7 +8,7 @@ import joblib
 from datetime import datetime
 import json
 
-# Try to import XGBoost, LightGBM, CatBoost
+# Trying XGBoost, LightGBM, CatBoost
 try:
     from xgboost import XGBRegressor
 except ImportError:
@@ -29,7 +29,7 @@ def load_and_preprocess_data(file_path='london_merged.csv'):
     df = pd.read_csv(file_path)
     df['timestamp'] = pd.to_datetime(df['timestamp'])
     
-    # Time-based features
+    # Features
     df['hour'] = df['timestamp'].dt.hour
     df['day_of_week'] = df['timestamp'].dt.dayofweek
     df['month'] = df['timestamp'].dt.month
@@ -37,12 +37,10 @@ def load_and_preprocess_data(file_path='london_merged.csv'):
     df['is_rush_hour'] = df['hour'].apply(lambda x: 1 if 7 <= x <= 9 or 16 <= x <= 19 else 0)
     df['is_morning'] = df['hour'].apply(lambda x: 1 if 6 <= x <= 11 else 0)
     df['is_evening'] = df['hour'].apply(lambda x: 1 if 17 <= x <= 22 else 0)
-    
-    # Interaction features
     df['temp_hum'] = df['t1'] * df['hum']
     df['temp_wind'] = df['t1'] * df['wind_speed']
     
-    # Dummy variables
+    # Categorical Features
     weather_dummies = pd.get_dummies(df['weather_code'], prefix='weather')
     season_dummies = pd.get_dummies(df['season'], prefix='season')
     
@@ -60,10 +58,10 @@ def evaluate_model(model, X, y, feature_names, scaler=None):
     """
     Evaluate model performance and return metrics
     """
-    # Make predictions
+    # Predicting
     y_pred = model.predict(X)
     
-    # Calculate metrics
+    # Metrics Calculation
     metrics = {
         'mse': mean_squared_error(y, y_pred),
         'rmse': np.sqrt(mean_squared_error(y, y_pred)),
@@ -71,7 +69,7 @@ def evaluate_model(model, X, y, feature_names, scaler=None):
         'r2': r2_score(y, y_pred)
     }
     
-    # Calculate feature importance
+    # Feature Importance
     feature_importance = {}
     if hasattr(model, 'feature_importances_'):
         feature_importance = dict(zip(feature_names, model.feature_importances_))
@@ -90,35 +88,27 @@ def train_model():
     """
     Train the model and save necessary artifacts
     """
-    # Load and preprocess data
     X, y = load_and_preprocess_data()
     
-    # Split the data
     X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=42)
     
-    # Scale the features
     scaler = StandardScaler()
     X_train_scaled = scaler.fit_transform(X_train)
     X_test_scaled = scaler.transform(X_test)
     
-    # Try GradientBoostingRegressor
     model = GradientBoostingRegressor(n_estimators=200, learning_rate=0.1, max_depth=5, random_state=42)
     model.fit(X_train_scaled, y_train)
     
-    # Cross-validation
     cv_scores = cross_val_score(model, X_train_scaled, y_train, cv=5, scoring='neg_mean_squared_error')
     cv_rmse = np.sqrt(-cv_scores)
     print(f"Cross-validated RMSE: {cv_rmse.mean():.2f} ± {cv_rmse.std():.2f}")
     
-    # Evaluate model
     metrics, feature_importance = evaluate_model(model, X_test_scaled, y_test, X.columns)
     
-    # Save the model and scaler
     joblib.dump(model, 'bike_model.joblib')
     joblib.dump(scaler, 'scaler.joblib')
     joblib.dump(X.columns.tolist(), 'feature_names.joblib')
     
-    # Save metrics
     with open('model_metrics.json', 'w') as f:
         json.dump({
             'metrics': metrics,
